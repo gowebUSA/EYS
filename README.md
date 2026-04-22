@@ -120,13 +120,13 @@ It demonstrates:
 - How cash flow beats savings accounts
 - How injecting principal flips the system
 
-👉 That’s your whole message:
+👉 That’s the whole message:
 
 > “Money saved is money earned”
 
 🔑 Simple way to explain it to clients
 
-“This script shows what the bank does to you… and what happens when you flip it.”
+> “This script shows what the bank does to you… and what happens when you flip it.”
 
 
 
