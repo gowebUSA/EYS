@@ -65,9 +65,9 @@ This part runs month by month:
 - Reduces the balance
 - Repeats
 
-### 4. ⚡ Elimin8 logic (your secret sauce)
+### 4. ⚡ Elimin8 logic (the secret sauce)
 
-This is where your strategy kicks in:
+This is where the strategy kicks in:
 
 ```
   if (extraPayment > 0) {
@@ -82,6 +82,7 @@ This is where your strategy kicks in:
 - Kill principal faster
 - Reduce future interest
 
+This is exactly the concept:
 👉 principal-first acceleration instead of interest-heavy schedule
 
 ### 5. 📊 Updating the table
@@ -97,7 +98,7 @@ This is where your strategy kicks in:
   `;
 ```
 
-👉 This builds your amortization table dynamically.
+👉 This builds the amortization table dynamically.
 
 ### 6. 📈 Chart update
 
