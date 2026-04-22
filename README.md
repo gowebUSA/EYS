@@ -21,7 +21,9 @@ It:
 
 You’ll see stuff like:
 
-`const loan = parseFloat(document.getElementById("loanAmount").value);`
+```
+  const loan = parseFloat(document.getElementById("loanAmount").value);
+```
 
 👉 This means:
 
