@@ -5,7 +5,7 @@ Converted Excel to HTML using JavaScript.
 
 ## 🧠 What the <script> does (big picture)
 
-Your <script> is the brain of the calculator.
+Your `<script>` is the brain of the calculator.
 
 It:
 
