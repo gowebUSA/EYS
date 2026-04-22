@@ -33,8 +33,10 @@ You’ll see stuff like:
 
 Usually something like:
 
-`let monthlyRate = annualRate / 12;`
-`let payment = loan * (monthlyRate / (1 - Math.pow(1 + monthlyRate, -months)));`
+```
+  let monthlyRate = annualRate / 12;
+  let payment = loan * (monthlyRate / (1 - Math.pow(1 + monthlyRate, -months)));
+```
 
 👉 This is standard mortgage math:
 
