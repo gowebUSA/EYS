@@ -1,0 +1,805 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EYS Calc</title>
+  <meta name="description" content="Interactive mortgage payoff calculator with traditional amortization, regular extra payments, and line of credit payoff strategy." />
+  <style>
+    :root{
+      --blue:#3f548f;
+      --red:#c85858;
+      --green:#27b21c;
+      --gray:#e6e6e6;
+      --light:#f6f7fb;
+      --text:#1f2937;
+      --border:#bfc6d3;
+      --input:#ffffff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      color:var(--text);
+      background:#f3f4f6;
+    }
+    .wrap{
+      max-width:1360px;
+      margin:0 auto;
+      padding:22px;
+    }
+    h1{
+      margin:0 0 18px;
+      font-size:32px;
+      line-height:1.15;
+    }
+    .sub{
+      margin:0 0 18px;
+      color:#4b5563;
+      font-size:15px;
+    }
+    .grid-top{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(280px,1fr));
+      gap:18px;
+      margin-bottom:26px;
+    }
+    .panel{
+      background:#fff;
+      border-radius:8px;
+      box-shadow:0 2px 12px rgba(0,0,0,.06);
+      overflow:hidden;
+      border:1px solid #d8dde6;
+      display:flex;
+      flex-direction:column;
+      height:100%;
+    }
+    .panel-title{
+      color:#fff;
+      font-weight:700;
+      padding:12px 18px;
+      font-size:20px;
+      letter-spacing:.2px;
+    }
+    .blue{background:var(--blue)}
+    .red{background:var(--red)}
+    .green{background:var(--green)}
+    .panel-body{
+      padding:12px 16px 16px;
+      background:#eef2fb;
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .panel.red-panel .panel-body{ background:#f5e8e8; }
+    .panel.green-panel .panel-body{ background:#e3f4e3; }
+    .field-row{
+      display:grid;
+      grid-template-columns: 1.9fr 1fr;
+      align-items:center;
+      gap:12px;
+      margin:8px 0;
+    }
+    .field-row label{
+      font-size:15px;
+      text-align:right;
+      padding-right:6px;
+    }
+    .field-row input, .field-row select{
+      width:100%;
+      padding:9px 10px;
+      border:1px solid #a9b3c4;
+      background:var(--input);
+      font-size:16px;
+      border-radius:4px;
+      text-align:right;
+    }
+    .field-row input[readonly]{
+      background:#f8fafc;
+      color:#111827;
+      font-weight:600;
+    }
+    .field-row strong{
+      font-size:18px;
+    }
+    .note{
+      margin:8px 0 0;
+      font-size:12px;
+      font-style:italic;
+      text-align:center;
+      color:#374151;
+    }
+
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(280px,1fr));
+      gap:18px;
+      margin-bottom:24px;
+    }
+    .summary{
+      background:#fff;
+      border:1px solid #d6dbe6;
+      border-radius:8px;
+      box-shadow:0 2px 12px rgba(0,0,0,.05);
+      overflow:hidden;
+    }
+    .summary h2{
+      margin:0;
+      padding:14px 16px;
+      font-size:18px;
+      background:#dddddd;
+      color:#000;
+    }
+    .metric{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      padding:9px 16px;
+      align-items:center;
+      font-size:17px;
+    }
+    .metric strong{
+      font-size:18px;
+    }
+    .metric .value{
+      font-weight:700;
+    }
+
+    .comparison, .details{
+      background:#fff;
+      border-radius:8px;
+      border:1px solid #d6dbe6;
+      box-shadow:0 2px 12px rgba(0,0,0,.05);
+      padding:18px;
+      margin-bottom:22px;
+    }
+    .comparison h2, .details h2{
+      margin:0 0 14px;
+      font-size:24px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+    }
+    th, td{
+      padding:11px 10px;
+      border-bottom:1px solid #e5e7eb;
+      text-align:right;
+      vertical-align:middle;
+    }
+    th:first-child, td:first-child{ text-align:left; }
+    th{
+      background:#f8fafc;
+      font-size:14px;
+    }
+    .callout{
+      margin:0 0 18px;
+      padding:16px 18px;
+      background:#fef3c7;
+      border:1px solid #f8df88;
+      border-radius:8px;
+      font-size:15px;
+    }
+    .small{
+      font-size:13px;
+      color:#4b5563;
+    }
+    .tabs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:14px;
+    }
+    .tab-btn{
+      border:1px solid #c7d2e3;
+      background:#eef2ff;
+      padding:10px 14px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .tab-btn.active{
+      background:var(--blue);
+      border-color:var(--blue);
+      color:#fff;
+    }
+    .hidden{display:none}
+    .footer{
+      color:#6b7280;
+      font-size:12px;
+      margin-top:8px;
+      text-align:center;
+    }
+
+    .chart-card{
+      background:#fff;
+      border-radius:8px;
+      border:1px solid #d6dbe6;
+      box-shadow:0 2px 12px rgba(0,0,0,.05);
+      padding:18px;
+      margin-bottom:22px;
+    }
+    .chart-card h2{
+      margin:0 0 8px;
+      font-size:24px;
+    }
+    .chart-sub{
+      margin:0 0 14px;
+      color:#4b5563;
+      font-size:14px;
+    }
+    .chart-wrap{
+      width:100%;
+      overflow:auto;
+    }
+    #payoffChart{
+      width:100%;
+      height:380px;
+      display:block;
+      background:linear-gradient(180deg,#ffffff,#fafbff);
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+    }
+
+    @media (max-width: 980px){
+      .grid-top, .summary-grid{ grid-template-columns:1fr; }
+      .field-row{ grid-template-columns:1.3fr 1fr; }
+      .field-row label{ text-align:left; padding-right:0; }
+      h1{font-size:26px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Estimate Your Savings 🚀</h1>
+    <p class="sub">Mortgage Payoff Calculator with Offset Account & Line of Credit</p>
+
+    <div class="grid-top">
+      <section class="panel">
+        <div class="panel-title blue">MORTGAGE Information</div>
+        <div class="panel-body">
+          <div class="field-row"><label for="loanAmount">Loan Amount $</label><input id="loanAmount" type="number" step="0.01" value="775000"></div>
+          <div class="field-row"><label for="annualRate">Fixed Annual Interest Rate %</label><input id="annualRate" type="number" step="0.0001" value="5"></div>
+          <div class="field-row"><label for="termYears">Term (years)</label><input id="termYears" type="number" step="1" value="30"></div>
+          <div class="field-row"><label for="issueDate">Loan Issue Date</label><input id="issueDate" type="date" value="2026-04-08"></div>
+          <div class="field-row"><label for="monthlyPayment">Monthly Payment</label><input id="monthlyPayment" type="text" readonly></div>
+        </div>
+      </section>
+
+      <section class="panel red-panel panel">
+        <div class="panel-title red">BUDGET Information</div>
+        <div class="panel-body">
+          <div class="field-row"><label for="monthlyIncome">Monthly Income $</label><input id="monthlyIncome" type="number" step="0.01" value="9551"></div>
+          <div class="field-row"><label for="monthlyExpenses">Monthly Non-PI Expenses $</label><input id="monthlyExpenses" type="number" step="0.01" value="3199.63"></div>
+          <div class="field-row"><label for="monthlyLoanPaymentDisplay">Monthly Loan Payment</label><input id="monthlyLoanPaymentDisplay" type="text" readonly></div>
+          <div class="field-row"><label for="freeCashFlow"><strong>Free Cash Flow *</strong></label><input id="freeCashFlow" type="text" readonly></div>
+          <p class="note">* Used to make extra payments or pay off the line of credit.</p>
+        </div>
+      </section>
+
+      <section class="panel green-panel panel">
+        <div class="panel-title green">LINE OF CREDIT Information</div>
+        <div class="panel-body">
+          <div class="field-row"><label for="locAnnualRate">Starting Annual Rate %</label><input id="locAnnualRate" type="number" step="0.0001" value="9"></div>
+          <div class="field-row"><label for="amountToTransfer">Amount to Transfer $</label><input id="amountToTransfer" type="number" step="0.01" value="50000"></div>
+          <div class="field-row"><label for="paycheckParking">Paycheck Parking?</label>
+            <select id="paycheckParking">
+              <option value="No" selected>No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+          <div class="field-row"><label for="daysInYear">Days in Year</label><input id="daysInYear" type="number" step="1" value="365"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="summary-grid">
+      <section class="summary">
+        <h2>Scenario 1: Traditional Amortization</h2>
+        <div class="metric"><span>Total Interest</span><span id="s1Interest" class="value"></span></div>
+        <div class="metric"><span>Years to Pay Off</span><span id="s1Years" class="value"></span></div>
+        <div class="metric"><strong>Interest Savings</strong><span id="s1Savings" class="value"></span></div>
+        <div class="metric"><span>Total Payments</span><span id="s1TotalPaid" class="value"></span></div>
+      </section>
+
+      <section class="summary">
+        <h2>Scenario 2: Regular Extra Payments</h2>
+        <div class="metric"><span>Total Interest</span><span id="s2Interest" class="value"></span></div>
+        <div class="metric"><span>Years to Pay Off</span><span id="s2Years" class="value"></span></div>
+        <div class="metric"><strong>Interest Savings</strong><span id="s2Savings" class="value"></span></div>
+        <div class="metric"><span>Total Payments</span><span id="s2TotalPaid" class="value"></span></div>
+      </section>
+
+      <section class="summary">
+        <h2>Scenario 3: Using a Line of Credit</h2>
+        <div class="metric"><span>Total Interest</span><span id="s3Interest" class="value"></span></div>
+        <div class="metric"><span>Years to Pay Off</span><span id="s3Years" class="value"></span></div>
+        <div class="metric"><strong>Interest Savings</strong><span id="s3Savings" class="value"></span></div>
+        <div class="metric"><span>Total Payments</span><span id="s3TotalPaid" class="value"></span></div>
+      </section>
+    </div>
+
+    <section class="comparison">
+      <h2>Scenario Comparison</h2>
+      <div class="callout">
+        You can combine screnarios 2 & 3 for maximum effect.
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Scenario</th>
+            <th>Total Interest</th>
+            <th>Years / Months</th>
+            <th>Total Paid</th>
+            <th>Interest Savings</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Traditional</td>
+            <td id="cmp1Interest"></td>
+            <td id="cmp1Years"></td>
+            <td id="cmp1Paid"></td>
+            <td id="cmp1Savings"></td>
+          </tr>
+          <tr>
+            <td>Regular Extra Payments</td>
+            <td id="cmp2Interest"></td>
+            <td id="cmp2Years"></td>
+            <td id="cmp2Paid"></td>
+            <td id="cmp2Savings"></td>
+          </tr>
+          <tr>
+            <td>Using a Line of Credit</td>
+            <td id="cmp3Interest"></td>
+            <td id="cmp3Years"></td>
+            <td id="cmp3Paid"></td>
+            <td id="cmp3Savings"></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+
+    <section class="chart-card">
+      <h2>Balance Over Time</h2>
+      <p class="chart-sub">Compare the remaining balance path for traditional amortization, regular extra payments, and the line of credit strategy.</p>
+      <div class="chart-wrap">
+        <svg id="payoffChart" viewBox="0 0 1100 380" preserveAspectRatio="xMidYMid meet" aria-label="Mortgage payoff comparison chart"></svg>
+      </div>
+    </section>
+
+    <section class="details">
+      <h2>Schedule Preview</h2>
+      <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+        <div class="tabs" style="margin-bottom:0;">
+          <button class="tab-btn active" data-tab="traditional">Traditional</button>
+          <button class="tab-btn" data-tab="extra">Regular Extra Payments</button>
+          <button class="tab-btn" data-tab="loc">Line of Credit</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label for="rowCountSelect" class="small" style="font-size:14px; color:#374151;">Rows to show:</label>
+          <select id="rowCountSelect" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:14px;">
+            <option value="12" selected>12</option>
+            <option value="24">24</option>
+            <option value="48">48</option>
+            <option value="999999">All</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="tab-traditional" class="tab-panel">
+        <p class="small"><span id="labelTraditional">First 12 rows</span> from the traditional amortization schedule.</p>
+        <table id="tableTraditional"></table>
+      </div>
+
+      <div id="tab-extra" class="tab-panel hidden">
+        <p class="small"><span id="labelExtra">First 12 rows</span> from the regular extra payment schedule.</p>
+        <table id="tableExtra"></table>
+      </div>
+
+      <div id="tab-loc" class="tab-panel hidden">
+        <p class="small"><span id="labelLOC">First 12 rows</span> from the line of credit schedule.</p>
+        <table id="tableLOC"></table>
+      </div>
+    </section>
+
+    <p class="footer">Built by <a href="https://gssoftware.us/" target="_blank">GS Software</a>, an affiliate of <a href="https://elimin8mortgage.com/" target="_blank">Elimin8 Mortgage</a>.</p>
+  </div>
+
+  <script>
+    const el = id => document.getElementById(id);
+
+    function parseNum(id){
+      const v = parseFloat(el(id).value);
+      return Number.isFinite(v) ? v : 0;
+    }
+
+    function formatCurrency(v){
+      return new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', maximumFractionDigits:0}).format(v || 0);
+    }
+
+    function formatCurrency2(v){
+      return new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', minimumFractionDigits:2, maximumFractionDigits:2}).format(v || 0);
+    }
+
+    function formatDate(d){
+      if(!d) return '';
+      const yr = d.getFullYear();
+      const mo = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${yr}-${mo}-${day}`;
+    }
+
+    function parseDateInput(value){
+      const [y,m,d] = value.split('-').map(Number);
+      return new Date(y, m-1, d);
+    }
+
+    function addMonth(date){
+      const d = new Date(date.getTime());
+      const day = d.getDate();
+      d.setDate(1);
+      d.setMonth(d.getMonth()+1);
+      const last = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+      d.setDate(Math.min(day, last));
+      return d;
+    }
+
+    function daysBetween(a,b){
+      return Math.round((b - a) / (1000*60*60*24));
+    }
+
+    function pmt(rate, nper, pv){
+      if(rate === 0) return -(pv / nper);
+      return -(rate * pv * Math.pow(1 + rate, nper)) / (Math.pow(1 + rate, nper) - 1);
+    }
+
+    function round2(v){
+      return Math.round((v + Number.EPSILON) * 100) / 100;
+    }
+
+    function yearsMonthsFromCount(monthCount){
+      const years = Math.floor(monthCount / 12);
+      const months = monthCount % 12;
+      return `${years} ${months}/12`;
+    }
+
+    function formatYearsDecimal(monthCount){
+      return round2(monthCount / 12);
+    }
+
+    function traditionalSchedule(inputs){
+      const payment = round2(-pmt(inputs.annualRate/12, inputs.termYears*12, inputs.loanAmount));
+      const rows = [];
+      let balance = round2(inputs.loanAmount);
+      let date = new Date(inputs.issueDate.getTime());
+      rows.push({n:0, date, payment:0, interest:0, principal:0, balance});
+      let totalInterest = 0;
+
+      for(let i=1; i<=2000 && balance > 0; i++){
+        date = addMonth(date);
+        const interest = round2((inputs.annualRate/12) * Math.max(0,balance));
+        const actualPayment = round2(Math.min(payment, balance + interest));
+        const principal = round2(actualPayment - interest);
+        balance = round2(balance - principal);
+        totalInterest += interest;
+        rows.push({n:i, date:new Date(date), payment:actualPayment, interest, principal, balance:Math.max(0,balance)});
+      }
+
+      return {
+        payment,
+        rows,
+        totalInterest: round2(totalInterest),
+        totalPaid: round2(inputs.loanAmount + totalInterest),
+        months: rows.length - 1
+      };
+    }
+
+    function extraPaymentSchedule(inputs, standardPayment){
+      const rows = [];
+      let balance = round2(inputs.loanAmount);
+      let date = new Date(inputs.issueDate.getTime());
+      rows.push({n:0, date, payment:0, interest:0, principal:0, balance});
+      let totalInterest = 0;
+
+      for(let i=1; i<=2000 && balance > 0; i++){
+        date = addMonth(date);
+        const interest = round2((inputs.annualRate/12) * Math.max(0,balance));
+        const actualPayment = round2(Math.min(standardPayment + inputs.freeCashFlow, balance + interest));
+        const principal = round2(actualPayment - interest);
+        balance = round2(balance - principal);
+        totalInterest += interest;
+        rows.push({n:i, date:new Date(date), payment:actualPayment, interest, principal, balance:Math.max(0,balance)});
+      }
+
+      return {
+        rows,
+        totalInterest: round2(totalInterest),
+        totalPaid: round2(inputs.loanAmount + totalInterest),
+        months: rows.length - 1
+      };
+    }
+
+    function locSchedule(inputs, standardPayment){
+      const rows = [];
+      let date = new Date(inputs.issueDate.getTime());
+
+      let mortBal = round2(inputs.loanAmount - inputs.amountToTransfer);
+      let locPrin = round2(inputs.amountToTransfer + (inputs.paycheckParking ? -inputs.monthlyIncome : 0));
+      let locIntBal = 0;
+      let totalOwed = round2(mortBal + locPrin + locIntBal);
+
+      rows.push({
+        n:0,
+        date:new Date(date),
+        mortPayment:inputs.amountToTransfer,
+        mortInterest:0,
+        mortPrincipal:inputs.amountToTransfer,
+        mortBalance:mortBal,
+        locPayment: inputs.paycheckParking ? inputs.monthlyIncome : 0,
+        locDraw: 0,
+        mortDraw: inputs.amountToTransfer,
+        locInterestAccrued:0,
+        locInterestPaid:0,
+        locInterestBalance:locIntBal,
+        locPrincipalPaid: inputs.paycheckParking ? (inputs.monthlyIncome - inputs.amountToTransfer) : -inputs.amountToTransfer,
+        locBalance:locPrin,
+        totalOwed
+      });
+
+      let prevDate = new Date(date);
+      let totalInterest = 0;
+
+      for(let i=1; i<=2000 && totalOwed > 0.004; i++){
+        date = addMonth(prevDate);
+
+        const mortInterest = round2((inputs.annualRate / 12) * Math.max(0, mortBal));
+        const mortDraw = mortBal <= 0 ? 0 :
+          (locPrin < inputs.freeCashFlow
+            ? Math.max(0, Math.min(inputs.amountToTransfer, mortInterest + mortBal + standardPayment))
+            : 0);
+
+        const mortPayment = mortBal <= 0 ? 0 : round2(Math.min(mortInterest + mortBal, standardPayment + mortDraw));
+        const mortPrincipal = round2(mortPayment - mortInterest);
+        const newMortBal = round2(mortBal - mortPrincipal);
+
+        const locDraw = inputs.paycheckParking ? round2(inputs.monthlyExpenses + standardPayment) : 0;
+
+        const locInterestAccrued = round2(daysBetween(prevDate, date) * (inputs.locAnnualRate / inputs.daysInYear) * Math.max(0, locPrin));
+
+        let locPayment;
+        if(mortBal === 0){
+          locPayment = round2(
+            Math.min(locPrin + locIntBal + locInterestAccrued, Math.max(0, inputs.freeCashFlow + standardPayment)) +
+            (inputs.paycheckParking ? standardPayment + inputs.monthlyExpenses : 0)
+          );
+        }else{
+          locPayment = round2(inputs.paycheckParking ? inputs.monthlyIncome : inputs.freeCashFlow);
+        }
+
+        const locInterestPaid = round2(Math.max(0, Math.min(locPayment, locIntBal + locInterestAccrued)));
+        const newLocIntBal = round2((locIntBal + locInterestAccrued) - locInterestPaid);
+        const locPrincipalPaid = round2(locPayment - locDraw - mortDraw - locInterestPaid);
+        const newLocPrin = round2(locPrin - locPrincipalPaid);
+        totalOwed = round2(newMortBal + newLocIntBal + newLocPrin);
+
+        totalInterest += mortInterest + locInterestAccrued;
+        rows.push({
+          n:i,
+          date:new Date(date),
+          mortPayment,
+          mortInterest,
+          mortPrincipal,
+          mortBalance:Math.max(0, newMortBal),
+          locPayment,
+          locDraw,
+          mortDraw,
+          locInterestAccrued,
+          locInterestPaid,
+          locInterestBalance:newLocIntBal,
+          locPrincipalPaid,
+          locBalance:newLocPrin,
+          totalOwed
+        });
+
+        mortBal = newMortBal;
+        locPrin = newLocPrin;
+        locIntBal = newLocIntBal;
+        prevDate = new Date(date);
+      }
+
+      return {
+        rows,
+        totalInterest: round2(totalInterest),
+        totalPaid: round2(inputs.loanAmount + totalInterest),
+        months: rows.length - 1
+      };
+    }
+
+    function renderTable(tableId, headers, rows){
+      const table = el(tableId);
+      const thead = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>`;
+      const tbody = `<tbody>${rows.map(r => `<tr>${r.map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}</tbody>`;
+      table.innerHTML = thead + tbody;
+    }
+
+
+    function renderPayoffChart(series){
+      const svg = el('payoffChart');
+      const width = 1100, height = 380;
+      const margin = {top: 24, right: 24, bottom: 46, left: 78};
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const maxMonths = Math.max(...series.map(s => s.data[s.data.length - 1]?.month || 0), 1);
+      const maxBalance = Math.max(...series.flatMap(s => s.data.map(d => d.balance)), 1);
+      const x = m => margin.left + (m / maxMonths) * plotW;
+      const y = b => margin.top + plotH - (b / maxBalance) * plotH;
+      const currencyCompact = v => {
+        if (v >= 1_000_000) return '$' + (v / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+        if (v >= 1000) return '$' + Math.round(v / 1000) + 'K';
+        return '$' + Math.round(v);
+      };
+      let parts = [];
+      parts.push(`<rect x="0" y="0" width="${width}" height="${height}" fill="transparent" rx="8" />`);
+      for(let i=0;i<=5;i++){
+        const val = maxBalance * (i/5);
+        const yy = y(val);
+        parts.push(`<line x1="${margin.left}" y1="${yy}" x2="${width-margin.right}" y2="${yy}" stroke="#e5e7eb" stroke-width="1" />`);
+        parts.push(`<text x="${margin.left-10}" y="${yy+4}" text-anchor="end" font-size="12" fill="#6b7280">${currencyCompact(val)}</text>`);
+      }
+      const xTicks = Math.min(6, Math.max(2, Math.ceil(maxMonths/24)));
+      for(let i=0;i<=xTicks;i++){
+        const month = Math.round(maxMonths * (i/xTicks));
+        const xx = x(month);
+        parts.push(`<line x1="${xx}" y1="${margin.top}" x2="${xx}" y2="${height-margin.bottom}" stroke="#f1f5f9" stroke-width="1" />`);
+        parts.push(`<text x="${xx}" y="${height-18}" text-anchor="middle" font-size="12" fill="#6b7280">${(month/12).toFixed(1).replace(/\.0$/, '')}y</text>`);
+      }
+      parts.push(`<line x1="${margin.left}" y1="${height-margin.bottom}" x2="${width-margin.right}" y2="${height-margin.bottom}" stroke="#94a3b8" stroke-width="1.2" />`);
+      parts.push(`<line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${height-margin.bottom}" stroke="#94a3b8" stroke-width="1.2" />`);
+      const colors = ['#3f548f','#c85858','#27b21c'];
+      series.forEach((s, idx) => {
+        const points = s.data.map(d => `${x(d.month)},${y(d.balance)}`).join(' ');
+        parts.push(`<polyline points="${points}" fill="none" stroke="${colors[idx]}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`);
+        const last = s.data[s.data.length - 1];
+        if(last){
+          parts.push(`<circle cx="${x(last.month)}" cy="${y(last.balance)}" r="4" fill="${colors[idx]}" />`);
+        }
+      });
+      const legendY = 18;
+      series.forEach((s, idx) => {
+        const lx = margin.left + idx * 240;
+        parts.push(`<line x1="${lx}" y1="${legendY}" x2="${lx+28}" y2="${legendY}" stroke="${colors[idx]}" stroke-width="4" stroke-linecap="round" />`);
+        parts.push(`<text x="${lx+36}" y="${legendY+4}" font-size="13" fill="#374151">${s.name}</text>`);
+      });
+      parts.push(`<text x="${width/2}" y="${height-4}" text-anchor="middle" font-size="12" fill="#6b7280">Years</text>`);
+      parts.push(`<text x="18" y="${height/2}" text-anchor="middle" font-size="12" fill="#6b7280" transform="rotate(-90 18 ${height/2})">Remaining Balance</text>`);
+      svg.innerHTML = parts.join('');
+    }
+
+    function update(){
+      const inputs = {
+        loanAmount: parseNum('loanAmount'),
+        annualRate: parseNum('annualRate') / 100,
+        termYears: parseNum('termYears'),
+        issueDate: parseDateInput(el('issueDate').value),
+        monthlyIncome: parseNum('monthlyIncome'),
+        monthlyExpenses: parseNum('monthlyExpenses'),
+        locAnnualRate: parseNum('locAnnualRate') / 100,
+        amountToTransfer: parseNum('amountToTransfer'),
+        paycheckParking: el('paycheckParking').value === 'Yes',
+        daysInYear: parseNum('daysInYear')
+      };
+
+      const standardPayment = round2(-pmt(inputs.annualRate/12, inputs.termYears*12, inputs.loanAmount));
+      const freeCashFlow = round2(inputs.monthlyIncome - inputs.monthlyExpenses - standardPayment);
+
+      el('monthlyPayment').value = formatCurrency2(standardPayment);
+      el('monthlyLoanPaymentDisplay').value = formatCurrency2(standardPayment);
+      el('freeCashFlow').value = formatCurrency2(freeCashFlow);
+
+      inputs.freeCashFlow = freeCashFlow;
+
+      const s1 = traditionalSchedule(inputs);
+      const s2 = extraPaymentSchedule(inputs, standardPayment);
+      const s3 = locSchedule(inputs, standardPayment);
+
+      const s1Savings = 0;
+      const s2Savings = round2(s1.totalInterest - s2.totalInterest);
+      const s3Savings = round2(s1.totalInterest - s3.totalInterest);
+
+      el('s1Interest').textContent = formatCurrency(s1.totalInterest);
+      el('s1Years').textContent = yearsMonthsFromCount(s1.months);
+      el('s1Savings').textContent = formatCurrency(s1Savings);
+      el('s1TotalPaid').textContent = formatCurrency(s1.totalPaid);
+
+      el('s2Interest').textContent = formatCurrency(s2.totalInterest);
+      el('s2Years').textContent = yearsMonthsFromCount(s2.months);
+      el('s2Savings').textContent = formatCurrency(s2Savings);
+      el('s2TotalPaid').textContent = formatCurrency(s2.totalPaid);
+
+      el('s3Interest').textContent = formatCurrency(s3.totalInterest);
+      el('s3Years').textContent = yearsMonthsFromCount(s3.months);
+      el('s3Savings').textContent = formatCurrency(s3Savings);
+      el('s3TotalPaid').textContent = formatCurrency(s3.totalPaid);
+
+      el('cmp1Interest').textContent = formatCurrency(s1.totalInterest);
+      el('cmp1Years').textContent = yearsMonthsFromCount(s1.months);
+      el('cmp1Paid').textContent = formatCurrency(s1.totalPaid);
+      el('cmp1Savings').textContent = formatCurrency(s1Savings);
+
+      el('cmp2Interest').textContent = formatCurrency(s2.totalInterest);
+      el('cmp2Years').textContent = yearsMonthsFromCount(s2.months);
+      el('cmp2Paid').textContent = formatCurrency(s2.totalPaid);
+      el('cmp2Savings').textContent = formatCurrency(s2Savings);
+
+      el('cmp3Interest').textContent = formatCurrency(s3.totalInterest);
+      el('cmp3Years').textContent = yearsMonthsFromCount(s3.months);
+      el('cmp3Paid').textContent = formatCurrency(s3.totalPaid);
+      el('cmp3Savings').textContent = formatCurrency(s3Savings);
+
+      renderPayoffChart([
+        {name:'Traditional', data:s1.rows.map(r => ({month:r.n, balance:r.balance}))},
+        {name:'Extra Payments', data:s2.rows.map(r => ({month:r.n, balance:r.balance}))},
+        {name:'Line of Credit', data:s3.rows.map(r => ({month:r.n, balance:Math.max(0, r.totalOwed)}))}
+      ]);
+
+      const rowLimitRaw = parseInt(el('rowCountSelect')?.value || '48', 10);
+      const rowLimit = Number.isFinite(rowLimitRaw) ? rowLimitRaw : 48;
+      const labelText = rowLimit >= 999999 ? 'All rows' : `First ${rowLimit} rows`;
+
+      el('labelTraditional').textContent = labelText;
+      el('labelExtra').textContent = labelText;
+      el('labelLOC').textContent = labelText;
+
+      renderTable(
+        'tableTraditional',
+        ['Pmt No.', 'Date', 'Payment', 'Interest', 'Principal', 'Balance'],
+        s1.rows.slice(1, rowLimit >= 999999 ? undefined : rowLimit + 1).map(r => [r.n, formatDate(r.date), formatCurrency2(r.payment), formatCurrency2(r.interest), formatCurrency2(r.principal), formatCurrency2(r.balance)])
+      );
+
+      renderTable(
+        'tableExtra',
+        ['Pmt No.', 'Date', 'Payment', 'Interest', 'Principal', 'Balance'],
+        s2.rows.slice(1, rowLimit >= 999999 ? undefined : rowLimit + 1).map(r => [r.n, formatDate(r.date), formatCurrency2(r.payment), formatCurrency2(r.interest), formatCurrency2(r.principal), formatCurrency2(r.balance)])
+      );
+
+      renderTable(
+        'tableLOC',
+        ['Pmt No.', 'Date', 'Mrtg Pmt', 'Mrtg Int', 'Mrtg Bal', 'LOC Pmt', 'LOC Draw', 'Mrtg Draw', 'LOC Int Accrued', 'LOC Bal', 'Total Owed'],
+        s3.rows.slice(1, rowLimit >= 999999 ? undefined : rowLimit + 1).map(r => [
+          r.n,
+          formatDate(r.date),
+          formatCurrency2(r.mortPayment),
+          formatCurrency2(r.mortInterest),
+          formatCurrency2(r.mortBalance),
+          formatCurrency2(r.locPayment),
+          formatCurrency2(r.locDraw),
+          formatCurrency2(r.mortDraw),
+          formatCurrency2(r.locInterestAccrued),
+          formatCurrency2(r.locBalance),
+          formatCurrency2(r.totalOwed)
+        ])
+      );
+    }
+
+    document.querySelectorAll('input, select').forEach(node => {
+      node.addEventListener('input', update);
+      node.addEventListener('change', update);
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+      });
+    });
+
+    update();
+  </script>
+</body>
+</html>
